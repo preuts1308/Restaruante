@@ -19,10 +19,10 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      - MYSQL_DATABASE=db
-      - MYSQL_ROOT_PASSWORD=FGHqB0nR
+      - MYSQL_DATABASE=laravel
+      - MYSQL_ALLOW_EMPTY_PASSWORD=1
     ports:
-      - '1310:3306'
+      - '3306:3306'
     volumes:
       - db:/var/lib/mysql
     networks:

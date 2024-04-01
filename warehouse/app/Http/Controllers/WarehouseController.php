@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Inventory;
 use App\Http\Requests\StoreInventoryRequest;
 use App\Http\Requests\UpdateInventoryRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class WarehouseController extends Controller
 {
@@ -12,20 +14,33 @@ class WarehouseController extends Controller
     {
         $ingredients = $request->input('ingredients');
 
-        foreach ($ingredients as $ingredient) {
-            $availableQuantity = $this->checkInventory($ingredient);
+        // Verificar si hay ingredientes en la lista
+        if (!empty($ingredients)) {
+            foreach ($ingredients as $ingredient) {
+                // Verificar la cantidad disponible en el inventario para cada ingrediente
+                $availableQuantity = $this->checkInventory($ingredient);
 
-            if ($availableQuantity < $ingredient['quantity']) {
-                $this->purchaseIngredients($ingredient);
+                // Verificar si la cantidad disponible es insuficiente
+                if ($availableQuantity < $ingredient['quantity']) {
+                    // Comprar los ingredientes necesarios
+                    $this->purchaseIngredients($ingredient);
+                }
             }
+
+            // Descontar los ingredientes utilizados del inventario
+            $this->deductIngredientsFromInventory($recipe);
+
+            // Retornar un mensaje indicando que se han obtenido los ingredientes necesarios
+            return response()->json(['message' => 'Tenemos los ingredientes'], 200);
+        } else {
+            // Si la lista de ingredientes está vacía, retornar un mensaje de error
+            return response()->json(['message' => 'La lista de ingredientes está vacía'], 400);
         }
-        $this->deductIngredientsFromInventory($recipe);
-        return response()->json(['message' => 'Tenemos los ingredientes']);
     }
 
     private function checkInventory($ingredient)
     {
- 
+
         return Inventory::where('ingredient_id', $ingredient['id'])->value('quantity');
     }
 
@@ -36,21 +51,21 @@ class WarehouseController extends Controller
         $response = Http::get('https://microservices-utadeo-arqfea471e6a9d4.herokuapp.com/api/v1/software-architecture/market-place', [
             'ingredient' => $ingredient['name']
         ]);
-    
+
         $purchaseResponse = $response->json();
-    
+
         if (isset($purchaseResponse['data'])) {
             $data = $purchaseResponse['data'];
             foreach ($data as $ingredientName => $quantityPurchased) {
                 // Obtener el ID del ingrediente
                 $ingredientId = $this->getIngredientIdByName($ingredientName);
-                
+
                 // Obtener la cantidad actual en inventario
                 $currentQuantity = Inventory::where('ingredient_id', $ingredientId)->value('quantity');
-                
+
                 // Sumar la cantidad comprada a la cantidad actual
                 $newQuantity = $currentQuantity + $quantityPurchased;
-                
+
                 // Actualizar el inventario con la nueva cantidad
                 Inventory::updateOrCreate(
                     ['ingredient_id' => $ingredientId],
@@ -71,4 +86,4 @@ class WarehouseController extends Controller
             $inventory->save();
         }
     }
-}  
+}

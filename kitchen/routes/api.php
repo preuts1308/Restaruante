@@ -19,6 +19,6 @@ use App\Http\Controllers\RecipeController;
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //     return $request->user();
 // });
-Route::post('/kitchen', [KitchenController::class, 'prepareMeal']);
+Route::post('/cook', [RecipeController::class, 'processOrdersk']);
 Route::get('/inventory', [IngredientController::class, 'index']);
 Route::get('/recipes', [RecipeController::class, 'index']);

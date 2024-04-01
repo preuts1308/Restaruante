@@ -11,9 +11,17 @@ class OrderController extends Controller
     /**
      * Display a listing of the resource.
      */
+    public function inventory()
+    {
+        // Obtener los ingredientes y sus cantidades disponibles en la bodega de alimentos
+        $ingredients = ingredients::all();
+        return response()->json(['ingredients' => $ingredients]);
+    }
     public function index()
     {
         //
+        $orders = Order::all();
+        return response()->json($orders);
     }
 
     /**
@@ -22,6 +30,7 @@ class OrderController extends Controller
     public function create()
     {
         //
+
     }
 
     /**
@@ -29,8 +38,22 @@ class OrderController extends Controller
      */
     public function store(StoreOrderRequest $request)
     {
-        //
+
+        $request->validate([
+            'recipe' => 'required',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        Order::create([
+            'recipe' => $request->recipe,
+            'quantity' => $request->quantity,
+        ]);
+
+        return redirect()->route('orders.index')
+            ->with('success', 'Order created successfully.');
     }
+
+
 
     /**
      * Display the specified resource.

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Purchase;
 use App\Http\Requests\StorePurchaseRequest;
 use App\Http\Requests\UpdatePurchaseRequest;
+use Illuminate\Http\Request;
 
 class PurchaseController extends Controller
 {
@@ -13,9 +14,13 @@ class PurchaseController extends Controller
      */
     public function index()
     {
-        //
-    }
+        $compras = Purchase::all();
+        if ($compras->isEmpty()) {
+            return response()->json(['message' => 'No hay compras registradas']);
+          }
 
+          return response()->json(['compras' => $compras]);
+    }
     /**
      * Show the form for creating a new resource.
      */

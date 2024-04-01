@@ -3,18 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Recipe;
+use App\Models\Order;
 use App\Http\Requests\StoreRecipeRequest;
 use App\Http\Requests\UpdateRecipeRequest;
 
 class RecipeController extends Controller
 {
-    public function index()
-    {
-        $recipes = Recipe::with('ingredients')->get();
-        return response()->json(['recipes' => $recipes]);
-    }
-
-    public function receiveOrder(Request $request)
+    public function receiveOrder()
     {
         $recipe = $this->selectRandomRecipe();
 

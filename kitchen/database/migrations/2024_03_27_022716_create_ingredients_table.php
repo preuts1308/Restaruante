@@ -14,8 +14,7 @@ return new class extends Migration
         Schema::create('ingredients', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('quantity');
-            $table->string('unit');
+            $table->integer('quantity')->default(5);
             $table->timestamps();
         });
     }

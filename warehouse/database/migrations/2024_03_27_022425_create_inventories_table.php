@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('ingredient_id');
             $table->integer('quantity');
-            $table->decimal('unit_price', 8, 2);
+            //$table->decimal('unit_price', 8, 2);
             $table->timestamps();
 
             $table->foreign('ingredient_id')->references('id')->on('ingredients');

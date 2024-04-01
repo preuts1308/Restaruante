@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('ingredient_id');
             $table->integer('quantity');
-            $table->decimal('price', 8, 2);
             $table->timestamp('purchase_date')->useCurrent();
             $table->timestamps();
 

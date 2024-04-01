@@ -6,61 +6,69 @@ use App\Models\Inventory;
 use App\Http\Requests\StoreInventoryRequest;
 use App\Http\Requests\UpdateInventoryRequest;
 
-class InventoryController extends Controller
+class WarehouseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function processOrder(Request $request)
     {
-        //
+        $ingredients = $request->input('ingredients');
+
+        foreach ($ingredients as $ingredient) {
+            $availableQuantity = $this->checkInventory($ingredient);
+
+            if ($availableQuantity < $ingredient['quantity']) {
+                $this->purchaseIngredients($ingredient);
+            }
+        }
+        $this->deductIngredientsFromInventory($recipe);
+        return response()->json(['message' => 'Tenemos los ingredientes']);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    private function checkInventory($ingredient)
     {
-        //
+ 
+        return Inventory::where('ingredient_id', $ingredient['id'])->value('quantity');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreInventoryRequest $request)
+    private function purchaseIngredients($ingredient)
     {
-        //
+        $ingredientName = strtolower($ingredient['name']);
+        // Hacer una solicitud HTTP a la plaza de mercado para comprar los ingredientes
+        $response = Http::get('https://microservices-utadeo-arqfea471e6a9d4.herokuapp.com/api/v1/software-architecture/market-place', [
+            'ingredient' => $ingredient['name']
+        ]);
+    
+        $purchaseResponse = $response->json();
+    
+        if (isset($purchaseResponse['data'])) {
+            $data = $purchaseResponse['data'];
+            foreach ($data as $ingredientName => $quantityPurchased) {
+                // Obtener el ID del ingrediente
+                $ingredientId = $this->getIngredientIdByName($ingredientName);
+                
+                // Obtener la cantidad actual en inventario
+                $currentQuantity = Inventory::where('ingredient_id', $ingredientId)->value('quantity');
+                
+                // Sumar la cantidad comprada a la cantidad actual
+                $newQuantity = $currentQuantity + $quantityPurchased;
+                
+                // Actualizar el inventario con la nueva cantidad
+                Inventory::updateOrCreate(
+                    ['ingredient_id' => $ingredientId],
+                    ['quantity' => $newQuantity]
+                );
+            }
+        }
     }
+    private function deductIngredientsFromInventory($recipe)
+    {
+        // Obtener los ingredientes requeridos para la receta
+        $ingredients = $recipe->ingredients;
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Inventory $inventory)
-    {
-        //
+        // Reducir la cantidad de cada ingrediente en la bodega de alimentos
+        foreach ($ingredients as $ingredient) {
+            $inventory = Inventory::where('ingredient_id', $ingredient->id)->first();
+            $inventory->quantity -= $ingredient->pivot->quantity;
+            $inventory->save();
+        }
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Inventory $inventory)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateInventoryRequest $request, Inventory $inventory)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Inventory $inventory)
-    {
-        //
-    }
-}
+}  

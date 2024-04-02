@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Ingredient;
 use App\Http\Requests\StoreIngredientRequest;
 use App\Http\Requests\UpdateIngredientRequest;
+use App\Models\Inventory;
 
 class IngredientController extends Controller
 {
@@ -14,7 +15,7 @@ class IngredientController extends Controller
     public function index()
     {
     // Obtener los ingredientes y sus cantidades disponibles en la bodega de alimentos
-    $ingredients = Ingredient::all();
+    $ingredients =Ingredient::all();
 
     // Devolver los ingredientes como una respuesta JSON
     return response()->json(['ingredients' => $ingredients]);

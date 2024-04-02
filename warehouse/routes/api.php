@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\WarehouseController;
 
 
 /*
@@ -16,5 +17,5 @@ use App\Http\Controllers\PurchaseController;
 |
 */
 
-Route::post('/warehouse', [WarehouseController::class, 'processOrder']);
+Route::post('/validate', [WarehouseController::class, 'processOrder']);
 Route::get('/compras', [PurchaseController::class, 'index']);

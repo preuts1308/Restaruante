@@ -41,17 +41,23 @@ class RecipeController extends Controller
                     $ingredientList = [];
                     foreach ($ingredients as $ingredient) {
                         $ingredientList[] = [
-                            'name' => $ingredient->name,
-                            'quantity' => $ingredient->pivot->quantity
+                            'id' => $ingredient->id,
+                            //'quantity' => $ingredient->pivot->quantity
+                            'quantity' =>'1'
                         ];
                     }
-                    return response()->json(['message' =>  $ingredientList]);
+                    //$jsonData = json_encode($ingredientList);
+                    return response()->json(['ingredients' =>  $ingredientList]);
                     // Solicitar los ingredientes a la bodega de alimentos
-                    $response = Http::post('gateway/api/warehouse/', ['ingredients' => $ingredientList]);
-
+                    $response = Http::post('gateway/api/warehouse/validate', ['ingredients' => $ingredientList]);
+                    // $response = Http::withHeaders([
+                    //     'Content-Type' => 'application/json',
+                    // ])->post('gateway/api/warehouse/validate', ['data' => $jsonData]);
                     // Verificar si la solicitud fue exitosa
                     if ($response->successful()) {
                         // Retornar un mensaje indicando que se enviaron los ingredientes
+                        $pendingOrder->status = 'listo';
+                        $pendingOrder->save();
                         return response()->json(['message' => 'Se enviaron los ingredientes a la bodega de alimentos']);
                     } else {
                         // Retornar un mensaje de error si la solicitud falló
@@ -76,7 +82,7 @@ class RecipeController extends Controller
     private function requestIngredients($recipe)
     {
         // Hacer la solicitud a la bodega de alimentos
-        $response = Http::post('gateway/api/warehouse/', ['recipe' => $recipe]);
+        $response = Http::post('gateway/api/warehouse/validate', ['recipe' => $recipe]);
 
         // Verificar si la solicitud fue exitosa y retornar los ingredientes si están disponibles
         if ($response->successful()) {

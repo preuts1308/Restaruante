@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Inventory extends Model
 {
     protected $fillable = [
-        'ingredient_id',
+        'name',
         'quantity',
         // ... otros campos que quieras permitir
     ];

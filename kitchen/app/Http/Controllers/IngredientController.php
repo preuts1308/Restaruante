@@ -7,6 +7,7 @@ use App\Http\Requests\StoreIngredientRequest;
 use App\Http\Requests\UpdateIngredientRequest;
 use App\Models\Inventory;
 
+
 class IngredientController extends Controller
 {
     /**

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Inventory;
+use App\Models\Ingredient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -19,7 +19,7 @@ class WarehouseController extends Controller
         foreach ($data['ingredients'] as $ingredient) {
             // Verificar la cantidad disponible en el inventario para cada ingrediente
             $availableQuantity = $this->checkInventory($ingredient['id']);
-
+            this->purchaseIngredients();
             // Verificar si la cantidad disponible es insuficiente
             if ($availableQuantity < $ingredient['quantity']) {
                 return response()->json(['message' => 'No hay suficiente cantidad del ingrediente ' . $ingredient['id']], 400);
@@ -35,49 +35,19 @@ class WarehouseController extends Controller
 
     private function checkInventory($ingredientId)
     {
-        return Inventory::where('ingredient_id', $ingredientId)->value('quantity');
+        return Ingredient::where('id', $ingredientId)->value('quantity');
     }
 
-    private function purchaseIngredients()
-    {
-        // Obtener los ingredientes con cantidad igual a 0
-        $ingredientsToUpdate = Inventory::where('quantity', 0)->get();
-
-        foreach ($ingredientsToUpdate as $ingredient) {
-            // Convertir el nombre del ingrediente a minúsculas
-            $ingredientName = strtolower($ingredient->ingredient_name);
-
-            // Enviar una solicitud HTTP a la API de la plaza de mercado
-            $response = Http::get('https://microservices-utadeo-arq-fea471e6a9d4.herokuapp.com/api/v1/software-architecture/market-place', [
-                'ingredient' => $ingredientName
-            ]);
-
-            $purchaseResponse = $response->json();
-
-            if (isset($purchaseResponse[$ingredientName]) && $purchaseResponse[$ingredientName] > 0) {
-                // La compra fue exitosa
-                // Actualizar el inventario con la cantidad comprada
-                Inventory::updateOrCreate(
-                    ['ingredient_name' => $ingredientName],
-                    ['quantity' => $purchaseResponse[$ingredientName]]
-                );
-            } else {
-                // La compra no fue exitosa o el ingrediente no está disponible
-                // Mostrar un mensaje de error al usuario o realizar alguna acción correspondiente
-                // Por ejemplo:
-                // return response()->json(['message' => 'Error al comprar ingredientes o ingrediente no disponible'], 400);
-            }
-        }
-    }
     private function deductIngredientsFromInventory($ingredients)
     {
         foreach ($ingredients as $ingredient) {
             // Obtener la cantidad actual en inventario
-            $currentQuantity = Inventory::where('ingredient_id', $ingredient['id'])->first();
+            $currentQuantity = Ingredient::where('id', $ingredient['id'])->first();
 
-            // Si no se encuentra el ingrediente en el inventario, se crea con la cantidad indicada
+            // Si no se encuentra el ingrediente, se crea con la cantidad indicada
             if (!$currentQuantity) {
-                purchaseIngredients();
+                // Implementar la lógica para comprar el ingrediente
+                // ...
             } else {
                 // Restar la cantidad utilizada de la cantidad actual
                 $newQuantity = $currentQuantity->quantity - $ingredient['quantity'];
@@ -94,4 +64,35 @@ class WarehouseController extends Controller
             }
         }
     }
+    private function purchaseIngredients()
+{
+    // Obtener los ingredientes con cantidad igual a 0
+    $ingredientsToUpdate = Ingredient::where('quantity', 0)->get();
+
+    foreach ($ingredientsToUpdate as $ingredient) {
+        // Convertir el nombre del ingrediente a minúsculas
+        $ingredientName = strtolower($ingredient->ingredient_name);
+
+        // Enviar una solicitud HTTP a la API de la plaza de mercado
+        $response = Http::get('https://microservices-utadeo-arq-fea471e6a9d4.herokuapp.com/api/v1/software-architecture/market-place', [
+            'ingredient' => $ingredientName
+        ])->json();
+
+        $purchaseResponse = $response->json();
+
+        if (isset($purchaseResponse[$ingredientName]) && $purchaseResponse[$ingredientName] > 0) {
+            // La compra fue exitosa
+            // Actualizar el inventario con la cantidad comprada y la fecha de compra
+            Ingredient::updateOrCreate(
+                ['ingredient_name' => $ingredientName, 'purchase_date' => Carbon::now()],
+                ['quantity' => $purchaseResponse[$ingredientName]]
+            );
+        } else {
+            // La compra no fue exitosa o el ingrediente no está disponible
+            // Mostrar un mensaje de error al usuario o realizar alguna acción correspondiente
+            // Por ejemplo:
+            // return response()->json(['message' => 'Error al comprar ingredientes o ingrediente no disponible'], 400);
+        }
+    }
+}
 }
